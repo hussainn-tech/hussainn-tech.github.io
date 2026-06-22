@@ -682,3 +682,68 @@
 <script src="script.js"></script>
 </body>
 </html>
+
+<script>
+
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const message = input.value;
+
+  if (!message.trim()) return;
+
+  addMessage("user", message);
+  input.value = "";
+
+  addMessage("ai", "Typing...");
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+
+    removeLastAIMessage();
+    addMessage("ai", data.answer || "No response received.");
+
+  } catch (err) {
+    removeLastAIMessage();
+    addMessage("ai", "Error connecting to AI.");
+  }
+}
+
+
+function addMessage(sender, text) {
+  const chatBox = document.getElementById("chatMessages");
+
+  const msg = document.createElement("div");
+  msg.className = sender === "user" ? "msg msg-user" : "msg msg-ai";
+  msg.innerText = text;
+
+  chatBox.appendChild(msg);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+function removeLastAIMessage() {
+  const chatBox = document.getElementById("chatMessages");
+
+  const messages = chatBox.querySelectorAll(".msg-ai");
+
+  if (messages.length > 0) {
+    messages[messages.length - 1].remove();
+  }
+}
+
+
+function askSuggestion(el) {
+  const text = el.innerText;
+  document.getElementById("chatInput").value = text;
+  sendMessage();
+}
+
+</script>
